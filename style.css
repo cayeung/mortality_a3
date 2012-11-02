@@ -1,0 +1,23 @@
+svg.line-graph .hover-line {
+	stroke: #6E7B8B;
+}
+
+svg.line-graph .x.axis path {
+  display: none;
+}
+			
+svg.line-graph .x.axis text {
+	font-size: 12px;
+}
+
+svg.line-graph .y.axis line, .y.axis path {
+  fill: none;
+  stroke: #000;
+}
+			
+svg.line-graph .y.axis text {
+	font-size: 12px;
+}
+
+
+
