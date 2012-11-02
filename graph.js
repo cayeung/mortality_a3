@@ -86,14 +86,9 @@ function Graph(argsMap) {
 			.ease("linear")
 			.attr("d", lineEquation)
 			.attr("transform", null);
-			
-		
+
 	}
 
-	/*
-	 * Allow re-initializing the y function at any time.
-	 *  - it will properly determine what scale is being used based on last user choice (via public switchScale methods)
-	 */
 	var buildAxes = function() {
 		var maxY = d3.max(data.maxValues);
 		//debug("initY => maxregression: " + maxregressionLeft);
@@ -138,7 +133,6 @@ function Graph(argsMap) {
 			.attr("transform", "translate(-10,0)")
 			.call(yAxisLeft);
 
-		// create line function used to plot our data
 		lineEquation = d3.svg.line()
 			
 			.x(function(d,i) { 
@@ -153,20 +147,18 @@ function Graph(argsMap) {
 				.attr("class", "lines")
 				.selectAll("path")
 				.data(data.values);
-		
-		//looking for mouse listeners on page
+
 		$(container).mouseleave(function(event) {
-			handleMouseOutGraph(event);
+			mouseNotInGraph(event);
 		})
 
 		$(container).mousemove(function(event) {
-			handleMouseOverGraph(event);
+			mouseInGraph(event);
 		})		
 
 
 		allLines = lines.enter().append("g");
 
-		// add path (the actual line) to line group
 		allLines.append("path")
 				.attr("stroke", function(d, i) {
 					return data.colors[i];
@@ -174,17 +166,12 @@ function Graph(argsMap) {
 				.attr("fill", "none")
 				.attr("d", lineEquation) 
 				.on('mouseover', function(d, i) {
-					handleMouseOverLine(d, i);
+					mouseOnLineAction(d, i);
 				});
 
-		// add line label to line group
-		
-
-		// add a 'hover' line that we'll show as a user moves their mouse (or finger)
-		// so we can use it to show detailed values of each line
 		trackerLineGroup = graph.append("svg:g")
 							.attr("class", "hover-line");
-		// add the line to the group
+
 		trackerLine = trackerLineGroup
 			.append("svg:line")
 				.attr("x1", 10).attr("x2", 10) 
@@ -195,10 +182,6 @@ function Graph(argsMap) {
 
 	}
 
-	/**
-	 * Create a legend that displays the name of each line with appropriate color coding
-	 * and allows for showing the current value when doing a mouseOver
-	 */
 	var createLabels = function() {
 
 		var labelSet = graph.append("svg:g")
@@ -220,8 +203,6 @@ function Graph(argsMap) {
 					return height+30;
 				})
 
-
-		// put in placeholders with 0 width that we'll populate and resize dynamically
 		labelSet.append("svg:text")
 				.attr("class", "legend value")
 				.attr("fill", function(d, i) {
@@ -233,11 +214,6 @@ function Graph(argsMap) {
 
 	}
 
-
-
-	/**
-	 * Create scale buttons for switching the y-axis
-	 */
 	var createRegressionLabels = function() {
 		var totalLength = 0;		
 		// append a group to contain all lines
@@ -268,15 +244,13 @@ function Graph(argsMap) {
 					}
 				})
 				.attr("x", function(d, i) {
-					// return it at the width of previous labels (where the last one ends)
 					var currLen = totalLength;
-					// increment cumulative to include this one
 					totalLength += this.getComputedTextLength()+5;
 					return currLen;
 				})
 				.attr("y", -4)
 				.on('click', function(d, i) {
-					handleMouseClickScaleButton(this, d, i);
+					clickOnRegression(this, d, i);
 				});
 	}
 
@@ -287,53 +261,40 @@ function Graph(argsMap) {
 		$(container).trigger('Graph:configModification')
 	}
 
-	var handleMouseClickScaleButton = function(button, buttonData, index) {
+	var clickOnRegression = function(button, buttonData, index) {
 		if(index == 0) {
 			self.switch('linear');
 		} else if(index == 1) {
 			self.switch('power');
 		}
-
-
 	}
 
-
-	/**
-	 * Called when a user mouses over a line.
-	 */
-	var handleMouseOverLine = function(lineData, index) {
+	var mouseOnLineAction = function(lineData, index) {
 		isOnGraph = true;
 	}
+	
+	var mouseNotInGraph = function(event) {	
+		isOnGraph = false;
+	}
 
-	/**
-	 * Called when a user mouses over the graph.
-	 */
-	var handleMouseOverGraph = function(event) {	
+	var mouseInGraph = function(event) {	
 		var mouseX = event.pageX-trackerLineXOffset;
 		var mouseY = event.pageY-trackerLineYOffset;
 
+		
 		if(mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
 			trackerLine.classed("hide", false);
 			trackerLine.attr("x1", mouseX).attr("x2", mouseX)
 
-			displayValueLabelsForPositionX(mouseX)
+			displayXLabels(mouseX)
 
 			isOnGraph = true;
-		} else { //turn off tracking
-			handleMouseOutGraph(event)
+		} else { //mouse is outside of the graph and therefore must be ignored
+			mouseNotInGraph(event)
 		}
 	}
 
-
-	var handleMouseOutGraph = function(event) {	
-		isOnGraph = false;
-	}
-
-
-	/**
-	* Display the data values at position X in the legend value labels.
-	*/
-	var displayValueLabelsForPositionX = function(xPosition, withTransition) {
+	var displayXLabels = function(xPosition, withTransition) {
 		var animate = false;
 
 		var date;
